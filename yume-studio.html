@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yume Studio — Студия озвучки аниме</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Unbounded:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #09090f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: rgba(180,120,255,0.15);
+    --accent: #b47eff;
+    --accent2: #ff6eb4;
+    --accent3: #6ee7ff;
+    --text: #e8e4f0;
+    --muted: #7a7590;
+    --glow: 0 0 30px rgba(180,120,255,0.3);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Manrope', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(100,40,180,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 50% at 80% 80%, rgba(255,80,150,0.1) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 30% at 50% 50%, rgba(30,10,60,0.5) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .stars { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .star {
+    position: absolute; background: white; border-radius: 50%;
+    animation: twinkle var(--d, 3s) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: 0.1; } to { opacity: 0.8; } }
+
+  header {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 64px;
+    background: rgba(9,9,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    display: flex; align-items: center; cursor: pointer;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+
+  nav { display: flex; align-items: center; gap: 0.25rem; }
+
+  nav a {
+    color: var(--muted); text-decoration: none; padding: 0.4rem 0.85rem;
+    border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+    transition: all 0.2s; cursor: pointer;
+  }
+  nav a:hover, nav a.active { color: var(--text); background: rgba(180,120,255,0.12); }
+  nav a.active { color: var(--accent); }
+
+  .header-right { display: flex; align-items: center; gap: 0.75rem; }
+
+  .btn {
+    padding: 0.45rem 1.1rem; border-radius: 8px; font-size: 0.82rem; font-weight: 700;
+    font-family: 'Manrope', sans-serif; cursor: pointer; transition: all 0.2s; border: none;
+  }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white; box-shadow: 0 4px 15px rgba(180,120,255,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(180,120,255,0.4); }
+
+  .page { display: none; position: relative; z-index: 1; }
+  .page.active { display: block; }
+
+  .hero {
+    min-height: calc(100vh - 64px);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 4rem 2rem; position: relative;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.35rem 1rem; border-radius: 50px;
+    border: 1px solid rgba(180,120,255,0.3); background: rgba(180,120,255,0.08);
+    font-size: 0.72rem; font-weight: 700; color: var(--accent);
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 2rem;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero h1 {
+    font-family: 'Unbounded', cursive; font-size: clamp(1.8rem, 5vw, 4rem); font-weight: 700;
+    line-height: 1.2; margin-bottom: 1.5rem; animation: fadeUp 0.8s 0.1s ease both;
+  }
+
+  .hero h1 span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  .hero p {
+    font-size: 1rem; color: var(--muted); max-width: 500px;
+    line-height: 1.75; margin-bottom: 0.6rem; font-weight: 400;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .hero p.tagline {
+    font-size: 0.9rem; color: var(--accent); font-style: italic;
+    font-weight: 500; margin-bottom: 2.5rem;
+    animation: fadeUp 0.8s 0.25s ease both;
+  }
+
+  .hero-actions {
+    display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 4rem; animation: fadeUp 0.8s 0.3s ease both;
+  }
+
+  .btn-large { padding: 0.8rem 2rem; font-size: 0.9rem; border-radius: 12px; }
+
+  .hero-stats { display: flex; gap: 3rem; animation: fadeUp 0.8s 0.4s ease both; }
+
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Unbounded', cursive; font-size: 1.8rem; font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .stat-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; font-weight: 600; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section { padding: 4rem 2rem; max-width: 1280px; margin: 0 auto; }
+  .section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2rem; }
+  .section-title { font-family: 'Unbounded', cursive; font-size: 1rem; font-weight: 600; color: var(--text); }
+  .section-title span { color: var(--accent); }
+  .see-all { font-size: 0.8rem; color: var(--accent); cursor: pointer; font-weight: 600; opacity: 0.8; transition: opacity 0.2s; }
+  .see-all:hover { opacity: 1; }
+
+  .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.25rem; }
+
+  .anime-card {
+    border-radius: 12px; overflow: hidden; background: var(--card);
+    border: 1px solid var(--border); cursor: pointer;
+    transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; position: relative;
+  }
+  .anime-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 20px rgba(180,120,255,0.15);
+    border-color: rgba(180,120,255,0.4);
+  }
+
+  .anime-poster-placeholder {
+    width: 100%; aspect-ratio: 2/3;
+    display: flex; align-items: center; justify-content: center; font-size: 3rem;
+    position: relative; overflow: hidden;
+  }
+  .anime-poster-placeholder::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(180,120,255,0.1));
+  }
+
+  .anime-card-badge {
+    position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: 4px;
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    font-family: 'Manrope', sans-serif;
+  }
+  .badge-new { background: var(--accent2); color: white; }
+  .badge-ongoing { background: var(--accent3); color: #09090f; }
+  .badge-completed { background: rgba(180,120,255,0.3); color: var(--accent); border: 1px solid rgba(180,120,255,0.4); }
+
+  .anime-card-info { padding: 0.75rem; }
+  .anime-card-title { font-size: 0.82rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.3rem; color: var(--text); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .anime-card-meta { display: flex; align-items: center; justify-content: space-between; font-size: 0.7rem; color: var(--muted); font-weight: 500; }
+  .anime-rating { display: flex; align-items: center; gap: 0.2rem; color: #ffd166; }
+
+  .featured-carousel { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 4rem; }
+  .featured-card {
+    border-radius: 16px; overflow: hidden; position: relative; aspect-ratio: 16/9;
+    cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .featured-card:hover { transform: scale(1.02); box-shadow: 0 20px 50px rgba(0,0,0,0.6), var(--glow); }
+  .featured-card-bg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 5rem; }
+  .featured-card:first-child .featured-card-bg { background: linear-gradient(135deg, #1a0535, #4a1f8a); }
+  .featured-card:last-child .featured-card-bg { background: linear-gradient(135deg, #0a0a20, #1a1a60); }
+  .featured-card-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 60%);
+    padding: 1.25rem; display: flex; flex-direction: column; justify-content: flex-end;
+  }
+  .featured-card-ep { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.3rem; font-weight: 700; }
+  .featured-card-title { font-family: 'Unbounded', cursive; font-size: 0.9rem; font-weight: 600; line-height: 1.3; }
+
+  /* CATALOG */
+  .catalog-layout { display: grid; grid-template-columns: 240px 1fr; gap: 2rem; max-width: 1280px; margin: 0 auto; padding: 2rem; }
+  .filters-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; height: fit-content; position: sticky; top: 80px; }
+  .filter-section { margin-bottom: 1.5rem; }
+  .filter-label { font-size: 0.67rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 700; margin-bottom: 0.75rem; }
+  .filter-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .filter-tag {
+    padding: 0.3rem 0.7rem; border-radius: 6px; font-size: 0.72rem; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    cursor: pointer; font-family: 'Manrope', sans-serif; transition: all 0.2s;
+  }
+  .filter-tag:hover, .filter-tag.active { border-color: var(--accent); color: var(--accent); background: rgba(180,120,255,0.1); }
+  .filter-range { width: 100%; margin-top: 0.5rem; accent-color: var(--accent); }
+  .catalog-controls { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+  .catalog-count { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+  .catalog-sort { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--muted); }
+  .sort-select { background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 0.4rem 0.8rem; border-radius: 8px; font-size: 0.8rem; font-family: 'Manrope', sans-serif; cursor: pointer; }
+
+  .search-input-group { position: relative; display: flex; align-items: center; }
+  .search-icon { position: absolute; left: 1rem; color: var(--muted); font-size: 1rem; pointer-events: none; }
+  .search-input {
+    width: 100%; background: var(--card); border: 1px solid var(--border); color: var(--text);
+    padding: 0.85rem 1rem 0.85rem 2.8rem; border-radius: 12px; font-size: 0.9rem;
+    font-family: 'Manrope', sans-serif; font-weight: 500;
+    transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+  }
+  .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(180,120,255,0.15); }
+  .search-input::placeholder { color: var(--muted); }
+
+  /* PLAYER */
+  .player-layout { max-width: 1280px; margin: 0 auto; padding: 1.5rem 2rem; display: grid; grid-template-columns: 1fr 320px; gap: 2rem; }
+  .video-container { background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; position: relative; }
+  .video-placeholder { width: 100%; height: 100%; background: linear-gradient(135deg, #0d0020, #1a0040); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
+  .play-btn-big { width: 80px; height: 80px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 0 40px rgba(180,120,255,0.5); }
+  .play-btn-big:hover { transform: scale(1.1); box-shadow: 0 0 60px rgba(180,120,255,0.7); }
+  .video-controls { position: absolute; bottom: 0; left: 0; right: 0; padding: 1rem; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
+  .progress-bar-wrap { background: rgba(255,255,255,0.15); border-radius: 4px; height: 4px; margin-bottom: 0.75rem; cursor: pointer; position: relative; }
+  .progress-bar-fill { background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 4px; height: 100%; width: 0%; }
+  .video-ctrl-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .ctrl-left, .ctrl-right { display: flex; align-items: center; gap: 0.75rem; }
+  .ctrl-btn { background: none; border: none; color: white; font-size: 1rem; cursor: pointer; opacity: 0.8; transition: opacity 0.2s; padding: 0.2rem; font-family: 'Manrope', sans-serif; }
+  .ctrl-btn:hover { opacity: 1; }
+  .time-display { font-size: 0.75rem; color: rgba(255,255,255,0.7); font-weight: 500; }
+  .volume-slider { width: 70px; accent-color: var(--accent); }
+  .player-info { margin-top: 1.5rem; }
+  .player-title { font-family: 'Unbounded', cursive; font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .player-meta-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .player-meta-row span { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+  .genres-row { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .genre-tag { padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.7rem; font-weight: 700; border: 1px solid rgba(180,120,255,0.3); color: var(--accent); background: rgba(180,120,255,0.08); }
+  .player-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.75; font-weight: 400; }
+
+  .ep-list-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .ep-list-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .ep-list-title { font-size: 0.85rem; font-weight: 700; }
+  .ep-list-count { font-size: 0.75rem; color: var(--muted); }
+  .ep-list-scroll { height: 450px; overflow-y: auto; }
+  .ep-list-scroll::-webkit-scrollbar { width: 4px; }
+  .ep-list-scroll::-webkit-scrollbar-track { background: transparent; }
+  .ep-list-scroll::-webkit-scrollbar-thumb { background: rgba(180,120,255,0.3); border-radius: 2px; }
+  .ep-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .ep-item:hover { background: rgba(180,120,255,0.08); }
+  .ep-item.current { background: rgba(180,120,255,0.15); border-left: 3px solid var(--accent); }
+  .ep-num { font-size: 0.75rem; color: var(--muted); width: 24px; text-align: center; font-weight: 500; }
+  .ep-info { flex: 1; }
+  .ep-title { font-size: 0.78rem; font-weight: 600; margin-bottom: 0.15rem; }
+  .ep-dur { font-size: 0.68rem; color: var(--muted); }
+  .ep-watched { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+  .voice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
+  .voice-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem 1rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+  .voice-card:hover { border-color: rgba(180,120,255,0.4); transform: translateY(-3px); }
+  .voice-avatar { width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; border: 2px solid var(--border); }
+  .voice-name { font-size: 0.78rem; font-weight: 700; margin-bottom: 0.2rem; }
+  .voice-role { font-size: 0.65rem; color: var(--muted); }
+
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .tab { padding: 0.75rem 1.5rem; font-size: 0.82rem; font-weight: 700; font-family: 'Manrope', sans-serif; color: var(--muted); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 1rem; opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 420px; padding: 2.5rem; transform: translateY(20px); transition: transform 0.25s; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-title { font-family: 'Unbounded', cursive; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; text-align: center; }
+  .modal-subtitle { font-size: 0.82rem; color: var(--muted); text-align: center; margin-bottom: 2rem; }
+  .form-group { margin-bottom: 1rem; }
+  .form-label { display: block; font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; }
+  .form-input { width: 100%; background: var(--card); border: 1px solid var(--border); color: var(--text); padding: 0.7rem 1rem; border-radius: 10px; font-size: 0.9rem; font-family: 'Manrope', sans-serif; outline: none; transition: border-color 0.2s; }
+  .form-input:focus { border-color: var(--accent); }
+  .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
+  .modal-close:hover { color: var(--text); }
+
+  .toast-wrap { position: fixed; bottom: 2rem; right: 2rem; z-index: 300; display: flex; flex-direction: column; gap: 0.75rem; pointer-events: none; }
+  .toast { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1.25rem; font-size: 0.82rem; font-weight: 500; display: flex; align-items: center; gap: 0.75rem; animation: slideIn 0.3s ease; max-width: 320px; box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+  @keyframes slideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  .about-hero { padding: 4rem 2rem; max-width: 800px; margin: 0 auto; text-align: center; }
+  .about-hero h2 { font-family: 'Unbounded', cursive; font-size: 1.8rem; font-weight: 700; margin-bottom: 1.5rem; }
+  .about-hero p { font-size: 0.95rem; color: var(--muted); line-height: 1.8; margin-bottom: 1rem; font-weight: 400; }
+
+  .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.5rem; max-width: 900px; margin: 0 auto; padding: 0 2rem 4rem; }
+  .team-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem 1.5rem; text-align: center; transition: transform 0.2s, border-color 0.2s; }
+  .team-card:hover { transform: translateY(-4px); border-color: rgba(180,120,255,0.4); }
+  .team-avatar { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 1rem; font-size: 2rem; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(180,120,255,0.3); background: var(--surface); }
+  .team-name { font-weight: 700; margin-bottom: 0.3rem; font-size: 0.9rem; }
+  .team-role { font-size: 0.75rem; color: var(--muted); }
+
+  .search-page-wrap { max-width: 900px; margin: 0 auto; padding: 2rem; }
+
+  footer { border-top: 1px solid var(--border); padding: 2rem; text-align: center; font-size: 0.75rem; color: var(--muted); font-weight: 500; position: relative; z-index: 1; }
+  footer span { color: var(--accent); }
+
+  html::-webkit-scrollbar { width: 6px; }
+  html::-webkit-scrollbar-track { background: var(--bg); }
+  html::-webkit-scrollbar-thumb { background: rgba(180,120,255,0.3); border-radius: 3px; }
+
+  @media (max-width: 768px) {
+    .featured-carousel { grid-template-columns: 1fr; }
+    .catalog-layout { grid-template-columns: 1fr; }
+    .filters-panel { position: static; }
+    .player-layout { grid-template-columns: 1fr; }
+    nav { display: none; }
+    .hero-stats { gap: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<header>
+  <div class="logo" onclick="showPage('home')">
+    <img src="data:image/png;base64
+    alt="Yume Studio" style="height:48px;width:auto;object-fit:contain;mix-blend-mode:screen">
+  </div>
+  <nav>
+    <a onclick="showPage('home')" class="active" id="nav-home">Главная</a>
+    <a onclick="showPage('catalog')" id="nav-catalog">Каталог</a>
+    <a onclick="showPage('search')" id="nav-search">Поиск</a>
+    <a onclick="showPage('about')" id="nav-about">О студии</a>
+  </nav>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="openModal('auth')">Войти</button>
+    <button class="btn btn-primary" onclick="openModal('reg')">Регистрация</button>
+  </div>
+</header>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-badge">Студия озвучки аниме на русском</div>
+    <h1>Смотри аниме<br>на <span>русском языке</span></h1>
+    <p>Yume Studio — команда озвучки аниме, которые вдыхают жизнь в любимых персонажей.</p>
+    <p class="tagline">Yume Studio — место, где звучат мечты</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary btn-large" onclick="showPage('catalog')">▶ Смотреть аниме</button>
+      <button class="btn btn-ghost btn-large" onclick="showPage('about')">О студии</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-num">0</div><div class="stat-label">Аниме</div></div>
+      <div class="stat"><div class="stat-num">0</div><div class="stat-label">Зрителей</div></div>
+      <div class="stat"><div class="stat-num">0</div><div class="stat-label">Актёров</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title"><span>Новинки</span> студии</div>
+      <a class="see-all" onclick="showPage('catalog')">Все →</a>
+    </div>
+    <div class="featured-carousel">
+      <div class="featured-card" onclick="openPlayer(0)">
+        <div class="featured-card-bg" style="background:linear-gradient(135deg,#0d0020,#4a1f8a)"></div>
+        <div class="featured-card-overlay">
+          <div class="featured-card-ep">Онгоинг • 25 серий</div>
+          <div class="featured-card-title">Звёздное дитя</div>
+        </div>
+      </div>
+      <div class="featured-card" onclick="openPlayer(1)">
+        <div class="featured-card-bg" style="background:linear-gradient(135deg,#0a0a20,#1a1a60)"></div>
+        <div class="featured-card-overlay">
+          <div class="featured-card-ep">Онгоинг • 24 серии</div>
+          <div class="featured-card-title">Последний серафим</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title"><span>Все аниме</span></div>
+    </div>
+    <div class="anime-grid" id="popular-grid"></div>
+  </div>
+</div>
+
+<!-- CATALOG -->
+<div class="page" id="page-catalog">
+  <div class="catalog-layout">
+    <div class="filters-panel">
+      <div style="font-family:'Unbounded',cursive;font-size:0.85rem;font-weight:600;margin-bottom:1.5rem;color:var(--accent)">Фильтры</div>
+      <div class="filter-section">
+        <div class="filter-label">Жанр</div>
+        <div class="filter-tags" id="genre-tags"></div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Статус</div>
+        <div class="filter-tags">
+          <button class="filter-tag active" onclick="toggleFilter(this,'status')">Все</button>
+          <button class="filter-tag" onclick="toggleFilter(this,'status')">Онгоинг</button>
+          <button class="filter-tag" onclick="toggleFilter(this,'status')">Завершён</button>
+          <button class="filter-tag" onclick="toggleFilter(this,'status')">Анонс</button>
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Тип</div>
+        <div class="filter-tags">
+          <button class="filter-tag active" onclick="toggleFilter(this,'type')">Все</button>
+          <button class="filter-tag" onclick="toggleFilter(this,'type')">TV</button>
+          <button class="filter-tag" onclick="toggleFilter(this,'type')">Фильм</button>
+          <button class="filter-tag" onclick="toggleFilter(this,'type')">OVA</button>
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-label">Рейтинг от: <span id="rating-val">7.0</span></div>
+        <input type="range" class="filter-range" min="0" max="10" step="0.5" value="7"
+          oninput="document.getElementById('rating-val').textContent=this.value">
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:0.5rem" onclick="showToast('Фильтры применены')">Применить</button>
+    </div>
+
+    <div>
+      <div style="margin-bottom:1.5rem">
+        <div class="search-input-group">
+          <span class="search-icon">⌕</span>
+          <input type="text" class="search-input" placeholder="Поиск в каталоге..." oninput="catalogSearch(this.value)">
+        </div>
+      </div>
+      <div class="catalog-controls">
+        <div class="catalog-count" id="catalog-count">Найдено: 2 аниме</div>
+        <div class="catalog-sort">
+          Сортировка:
+          <select class="sort-select">
+            <option>По рейтингу</option>
+            <option>По дате</option>
+            <option>По алфавиту</option>
+          </select>
+        </div>
+      </div>
+      <div class="anime-grid" id="catalog-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH -->
+<div class="page" id="page-search">
+  <div class="search-page-wrap">
+    <h2 style="font-family:'Unbounded',cursive;font-size:1.4rem;font-weight:700;margin-bottom:1.5rem;text-align:center">
+      Поиск <span style="color:var(--accent)">аниме</span>
+    </h2>
+    <div style="margin-bottom:2rem">
+      <div class="search-input-group">
+        <span class="search-icon">⌕</span>
+        <input type="text" class="search-input" id="main-search" placeholder="Введите название аниме..." oninput="doSearch(this.value)" style="font-size:1rem;padding:1rem 1rem 1rem 3rem">
+      </div>
+    </div>
+    <div style="margin-bottom:1.5rem">
+      <div style="font-size:0.7rem;color:var(--muted);margin-bottom:0.75rem;text-transform:uppercase;letter-spacing:0.08em;font-weight:700">Популярные теги</div>
+      <div class="filter-tags" id="popular-tags"></div>
+    </div>
+    <div id="search-results">
+      <div style="text-align:center;padding:3rem;color:var(--muted)">
+        
+        <div style="font-weight:500">Начните вводить название для поиска</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER -->
+<div class="page" id="page-player">
+  <div class="player-layout">
+    <div>
+      <div class="video-container">
+        <div class="video-placeholder">
+          <div class="play-btn-big" onclick="togglePlay()" id="play-btn">▶</div>
+          <div style="color:var(--muted);font-size:0.85rem;font-weight:500" id="player-loading">Нажмите для воспроизведения</div>
+        </div>
+        <div class="video-controls">
+          <div class="progress-bar-wrap" onclick="seekVideo(event, this)">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+          </div>
+          <div class="video-ctrl-row">
+            <div class="ctrl-left">
+              <button class="ctrl-btn" onclick="togglePlay()">⏯</button>
+              <button class="ctrl-btn">⏮</button>
+              <button class="ctrl-btn" onclick="showToast('Следующая серия')">⏭</button>
+              <input type="range" class="volume-slider" min="0" max="100" value="80">
+              <span class="time-display">00:00 / 24:00</span>
+            </div>
+            <div class="ctrl-right">
+              <button class="ctrl-btn" onclick="showToast('Субтитры включены')">CC</button>
+              <button class="ctrl-btn" onclick="showToast('1080p')">HD</button>
+              <button class="ctrl-btn">⛶</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="player-info">
+        <div class="player-title" id="player-title"></div>
+        <div class="player-meta-row">
+          <span id="player-ep">Серия 1</span>
+          <span>•</span>
+          <span id="player-year">2024</span>
+          <span>•</span>
+          <span>TV</span>
+        </div>
+        <div class="genres-row" id="player-genres"></div>
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab(this,'desc')">Описание</button>
+          <button class="tab" onclick="switchTab(this,'voices')">Актёры озвучки</button>
+          <button class="tab" onclick="switchTab(this,'comments')">Обсуждение</button>
+        </div>
+        <div id="tab-desc" class="tab-content">
+          <p class="player-desc" id="player-desc"></p>
+        </div>
+        <div id="tab-voices" class="tab-content" style="display:none">
+          <div class="voice-grid" id="voice-grid"></div>
+        </div>
+        <div id="tab-comments" class="tab-content" style="display:none">
+          <div style="padding:2rem;text-align:center;color:var(--muted)">
+            
+            <div style="margin-bottom:1rem;font-weight:500">Войдите, чтобы оставлять комментарии</div>
+            <button class="btn btn-primary" onclick="openModal('auth')">Войти</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ep-list-panel">
+      <div class="ep-list-header">
+        <div class="ep-list-title">Список серий</div>
+        <div class="ep-list-count" id="ep-list-count"></div>
+      </div>
+      <div class="ep-list-scroll" id="ep-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div class="page" id="page-about">
+  <div class="about-hero">
+    <div class="hero-badge">О студии</div>
+    <h2>Мы — <span style="color:var(--accent)">Yume Studio</span></h2>
+    <p>Yume (夢) — в переводе с японского «мечта». Мы — команда озвучки аниме, которые вдыхают жизнь в любимых персонажей.</p>
+    <p style="color:var(--accent);font-style:italic;font-weight:500">Yume Studio — место, где звучат мечты</p>
+    <div class="hero-stats" style="justify-content:center;margin-top:2rem">
+      <div class="stat"><div class="stat-num">0</div><div class="stat-label">Проектов</div></div>
+      <div class="stat"><div class="stat-num">0</div><div class="stat-label">Актёров</div></div>
+      <div class="stat"><div class="stat-num">0</div><div class="stat-label">Зрителей</div></div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-bottom:2rem">
+    <div class="section-title">Наша <span style="color:var(--accent)">команда</span></div>
+  </div>
+  <div class="team-grid" id="team-grid"></div>
+  <footer>
+    <div style="font-family:'Unbounded',cursive;font-size:0.85rem;font-weight:600;margin-bottom:0.5rem;color:var(--accent)">Yume Studio</div>
+    Студия аниме-озвучки · Все права защищены
+  </footer>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-auth" onclick="closeModal('auth')">
+  <div class="modal" onclick="event.stopPropagation()" style="position:relative">
+    <button class="modal-close" onclick="closeModal('auth')">✕</button>
+    <div class="modal-title">Вход</div>
+    <div class="modal-subtitle">Войди, чтобы сохранять прогресс и оценивать аниме</div>
+    <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" placeholder="example@mail.ru"></div>
+    <div class="form-group"><label class="form-label">Пароль</label><input type="password" class="form-input" placeholder="••••••••"></div>
+    <button class="btn btn-primary" style="width:100%;padding:0.75rem;margin-top:0.5rem" onclick="closeModal('auth');showToast('Добро пожаловать!')">Войти</button>
+    <div style="text-align:center;margin-top:1rem;font-size:0.8rem;color:var(--muted)">
+      Нет аккаунта? <span style="color:var(--accent);cursor:pointer" onclick="closeModal('auth');openModal('reg')">Зарегистрироваться</span>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-reg" onclick="closeModal('reg')">
+  <div class="modal" onclick="event.stopPropagation()" style="position:relative">
+    <button class="modal-close" onclick="closeModal('reg')">✕</button>
+    <div class="modal-title">Регистрация</div>
+    <div class="modal-subtitle">Присоединяйся к сообществу Yume Studio</div>
+    <div class="form-group"><label class="form-label">Имя пользователя</label><input type="text" class="form-input" placeholder="AniWatcher"></div>
+    <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" placeholder="example@mail.ru"></div>
+    <div class="form-group"><label class="form-label">Пароль</label><input type="password" class="form-input" placeholder="••••••••"></div>
+    <button class="btn btn-primary" style="width:100%;padding:0.75rem;margin-top:0.5rem" onclick="closeModal('reg');showToast('Аккаунт создан!')">Создать аккаунт</button>
+    <div style="text-align:center;margin-top:1rem;font-size:0.8rem;color:var(--muted)">
+      Уже есть аккаунт? <span style="color:var(--accent);cursor:pointer" onclick="closeModal('reg');openModal('auth')">Войти</span>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+const animeData = [
+  {
+    id: 0,
+    title: 'Звёздное дитя',
+    year: 2024,
+    rating: 8.5,
+    episodes: 25,
+    status: 'ongoing',
+    genres: ['Фэнтези', 'Драма', 'Приключения'],
+    emoji: '',
+    color: '#4a1f8a',
+    desc: 'История о юной девочке, обнаружившей, что она является воплощением давно забытой звезды. Ей предстоит путешествие сквозь миры, чтобы раскрыть тайну своего происхождения и спасти угасающее небо.'
+  },
+  {
+    id: 1,
+    title: 'Последний серафим',
+    year: 2024,
+    rating: 8.8,
+    episodes: 24,
+    status: 'ongoing',
+    genres: ['Экшн', 'Сверхъестественное', 'Апокалипсис'],
+    emoji: '',
+    color: '#1a1a50',
+    desc: 'После того как человечество было почти уничтожено загадочным вирусом, выжившие оказались под властью вампиров. Юки Амане вступает в ряды Японской имперской армии демонов, чтобы отомстить за своих близких и освободить мир от тьмы.'
+  }
+];
+
+const voiceActors = [
+  { name: 'Алиса К.', role: 'Главный персонаж', emoji: '', color: '#6b1f8a' },
+  { name: 'Максим В.', role: 'Антагонист', emoji: '', color: '#8a1f3d' },
+  { name: 'Елена П.', role: 'Второй план', emoji: '', color: '#1f3d8a' },
+  { name: 'Антон С.', role: 'Рассказчик', emoji: '', color: '#1f8a3d' },
+];
+
+const genres = ['Экшн','Романтика','Комедия','Драма','Фэнтези','Sci-Fi','Хоррор','Школа','Сверхъестественное','Апокалипсис'];
+
+const teamMembers = [
+  { name: 'Алиса К.', role: 'Главный реж.', emoji: '' },
+  { name: 'Максим В.', role: 'Актёр озвучки', emoji: '' },
+  { name: 'Елена П.', role: 'Переводчик', emoji: '' },
+  { name: 'Антон С.', role: 'Звукореж.', emoji: '' },
+];
+
+// STARS
+(function() {
+  const wrap = document.getElementById('stars');
+  for(let i = 0; i < 120; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*5}s;animation-delay:${Math.random()*5}s`;
+    wrap.appendChild(s);
+  }
+})();
+
+function renderAnimeCard(anime) {
+  const badge = anime.status === 'new' ? 'badge-new' : anime.status === 'ongoing' ? 'badge-ongoing' : 'badge-completed';
+  const badgeText = anime.status === 'new' ? 'НОВИНКА' : anime.status === 'ongoing' ? 'ОНГОИНГ' : 'ЗАВЕРШЁН';
+  return `
+    <div class="anime-card" onclick="openPlayer(${anime.id})">
+      <div class="anime-poster-placeholder" style="background:linear-gradient(135deg,var(--surface),${anime.color}aa)">
+        
+        <span class="anime-card-badge ${badge}">${badgeText}</span>
+      </div>
+      <div class="anime-card-info">
+        <div class="anime-card-title">${anime.title}</div>
+        <div class="anime-card-meta">
+          <span>${anime.year} • ${anime.episodes} эп.</span>
+          <span class="anime-rating">${anime.rating}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+document.getElementById('popular-grid').innerHTML = animeData.map(renderAnimeCard).join('');
+document.getElementById('catalog-grid').innerHTML = animeData.map(renderAnimeCard).join('');
+
+document.getElementById('genre-tags').innerHTML = genres.map(g =>
+  `<button class="filter-tag" onclick="toggleFilter(this,'genre')">${g}</button>`
+).join('');
+
+const popTags = ['Фэнтези','Экшн','Драма','Приключения','Сверхъестественное','Апокалипсис'];
+document.getElementById('popular-tags').innerHTML = popTags.map(t =>
+  `<button class="filter-tag" onclick="document.getElementById('main-search').value='${t}';doSearch('${t}')">${t}</button>`
+).join('');
+
+document.getElementById('team-grid').innerHTML = teamMembers.map(m => `
+  <div class="team-card">
+    <div class="team-avatar">${m.emoji}</div>
+    <div class="team-name">${m.name}</div>
+    <div class="team-role">${m.role}</div>
+  </div>
+`).join('');
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const navEl = document.getElementById('nav-' + name);
+  if(navEl) navEl.classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function openPlayer(id) {
+  const anime = animeData[id] || animeData[0];
+  document.getElementById('player-title').textContent = anime.title;
+  document.getElementById('player-year').textContent = anime.year;
+  document.getElementById('player-ep').textContent = 'Серия 1 — Пилотный эпизод';
+  document.getElementById('player-desc').textContent = anime.desc;
+  document.getElementById('player-genres').innerHTML = anime.genres.map(g => `<span class="genre-tag">${g}</span>`).join('');
+  document.getElementById('ep-list-count').textContent = anime.episodes + ' серий';
+  document.getElementById('progress-fill').style.width = '0%';
+
+  document.getElementById('voice-grid').innerHTML = voiceActors.map(v => `
+    <div class="voice-card">
+      <div class="voice-avatar" style="background:${v.color}33;border-color:${v.color}55">${v.name.slice(0,1)}</div>
+      <div class="voice-name">${v.name}</div>
+      <div class="voice-role">${v.role}</div>
+    </div>
+  `).join('');
+
+  const epList = document.getElementById('ep-list');
+  epList.innerHTML = '';
+  for(let i = 1; i <= Math.min(anime.episodes, 20); i++) {
+    const div = document.createElement('div');
+    div.className = 'ep-item' + (i === 1 ? ' current' : '');
+    div.innerHTML = `
+      <span class="ep-num">${i}</span>
+      <div class="ep-info">
+        <div class="ep-title">Серия ${i}</div>
+        <div class="ep-dur">24:00</div>
+      </div>
+      ${i === 1 ? '<div class="ep-watched"></div>' : ''}
+    `;
+    div.onclick = () => {
+      document.querySelectorAll('.ep-item').forEach(e => e.classList.remove('current'));
+      div.classList.add('current');
+      document.getElementById('player-ep').textContent = `Серия ${i} — Пилотный эпизод`;
+      showToast(`Серия ${i} загружается...`);
+    };
+    epList.appendChild(div);
+  }
+
+  playing = false;
+  document.getElementById('play-btn').textContent = '▶';
+  document.getElementById('player-loading').textContent = 'Нажмите для воспроизведения';
+  showPage('player');
+}
+
+function doSearch(query) {
+  const results = document.getElementById('search-results');
+  if(!query.trim()) {
+    results.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--muted)"><div style="font-weight:500">Начните вводить название для поиска</div></div>`;
+    return;
+  }
+  const found = animeData.filter(a =>
+    a.title.toLowerCase().includes(query.toLowerCase()) ||
+    a.genres.some(g => g.toLowerCase().includes(query.toLowerCase()))
+  );
+  if(found.length === 0) {
+    results.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--muted)"><div style="font-weight:500">Ничего не найдено по запросу «${query}»</div></div>`;
+    return;
+  }
+  results.innerHTML = `<div style="margin-bottom:1rem;font-size:0.85rem;color:var(--muted);font-weight:500">Найдено: <strong style="color:var(--text)">${found.length}</strong></div><div class="anime-grid">${found.map(renderAnimeCard).join('')}</div>`;
+}
+
+function catalogSearch(query) {
+  const found = query ? animeData.filter(a => a.title.toLowerCase().includes(query.toLowerCase())) : animeData;
+  document.getElementById('catalog-grid').innerHTML = found.map(renderAnimeCard).join('');
+  document.getElementById('catalog-count').textContent = `Найдено: ${found.length} аниме`;
+}
+
+function toggleFilter(el, group) {
+  el.closest('.filter-tags').querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+let playing = false;
+let progressInterval;
+
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('play-btn').textContent = playing ? '⏸' : '▶';
+  document.getElementById('player-loading').textContent = playing ? 'Воспроизводится...' : 'На паузе';
+  if(playing) simulateProgress();
+}
+
+function simulateProgress() {
+  clearInterval(progressInterval);
+  let w = parseFloat(document.getElementById('progress-fill').style.width) || 0;
+  progressInterval = setInterval(() => {
+    if(!playing) { clearInterval(progressInterval); return; }
+    w = Math.min(100, w + 0.05);
+    document.getElementById('progress-fill').style.width = w + '%';
+    if(w >= 100) { clearInterval(progressInterval); playing = false; document.getElementById('play-btn').textContent = '▶'; }
+  }, 100);
+}
+
+function seekVideo(e, bar) {
+  const rect = bar.getBoundingClientRect();
+  document.getElementById('progress-fill').style.width = ((e.clientX - rect.left) / rect.width * 100) + '%';
+}
+
+function switchTab(btn, name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display='none');
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).style.display = 'block';
+}
+
+function openModal(name) { document.getElementById('modal-'+name).classList.add('open'); }
+function closeModal(name) { document.getElementById('modal-'+name).classList.remove('open'); }
+
+function showToast(msg) {
+  const wrap = document.getElementById('toast-wrap');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span>${msg}</span>`;
+  wrap.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0'; toast.style.transform = 'translateX(50px)'; toast.style.transition = 'all 0.3s';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+</script>
+</body>
+</html>

@@ -1063,7 +1063,7 @@ function togglePlayModal() {
   const v = document.getElementById('pm-real-video');
   if (v.style.display !== 'none' && v.src) return;
   pmPlaying = !pmPlaying;
-  document.getElementById('pm-play-btn').textContent = pmPlaying ? '⏸' : '▶';
+  document.getElementById('pm-play-btn').textContent = pmPlaying ? '▌▌' : '▶';
   document.getElementById('pm-loading').textContent = pmPlaying ? 'Воспроизводится...' : 'На паузе';
   if (pmPlaying) {
     clearInterval(pmProgressInterval);
